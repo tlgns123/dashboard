@@ -8,17 +8,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #0a0c10;
-    --surface: #111318;
-    --surface2: #181b22;
-    --border: #1e2330;
-    --accent: #00e5ff;
-    --accent2: #ff6b35;
-    --accent3: #7fff6b;
-    --accent4: #ffd166;
-    --red: #ff4757;
-    --text: #e8ecf4;
-    --muted: #5a6278;
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --surface2: #f0f2f8;
+    --border: #dde1ec;
+    --accent: #2563eb;
+    --accent2: #f97316;
+    --accent3: #16a34a;
+    --accent4: #d97706;
+    --red: #dc2626;
+    --text: #111827;
+    --muted: #6b7280;
     --font-display: 'Bebas Neue', sans-serif;
     --font-body: 'Nanum Gothic', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
@@ -34,29 +34,20 @@
     overflow-x: hidden;
   }
 
-  /* Grid background */
+  /* Light background subtle pattern */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(37,99,235,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(37,99,235,0.03) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Glow blobs */
-  body::after {
-    content: '';
-    position: fixed;
-    top: -200px; left: -200px;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-  }
+  body::after { content: none; }
 
   .wrapper {
     position: relative;
@@ -80,7 +71,7 @@
     font-family: var(--font-display);
     font-size: 48px;
     letter-spacing: 4px;
-    color: var(--text);
+    color: #111827;
     line-height: 1;
     margin-bottom: 4px;
   }
@@ -107,20 +98,20 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
     border-radius: 20px;
     padding: 6px 14px;
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--muted);
+    color: #15803d;
   }
 
   .status-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
-    background: var(--accent3);
-    box-shadow: 0 0 8px var(--accent3);
+    background: #16a34a;
+    box-shadow: 0 0 8px rgba(22,163,74,0.5);
     animation: pulse 2s infinite;
   }
 
@@ -136,9 +127,9 @@
   }
 
   .refresh-btn {
-    background: var(--surface2);
-    border: 1px solid var(--accent);
-    color: var(--accent);
+    background: #2563eb;
+    border: 1px solid #2563eb;
+    color: #ffffff;
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 1px;
@@ -149,8 +140,8 @@
     text-transform: uppercase;
   }
   .refresh-btn:hover {
-    background: rgba(0,229,255,0.1);
-    box-shadow: 0 0 16px rgba(0,229,255,0.2);
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
   }
 
   /* QUARTER SELECTOR */
@@ -184,10 +175,10 @@
   }
 
   .q-btn.active {
-    background: rgba(0,229,255,0.1);
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: 0 0 10px rgba(0,229,255,0.15);
+    background: #eff6ff;
+    border-color: #2563eb;
+    color: #2563eb;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.15);
   }
 
   .q-btn:hover:not(.active) {
@@ -207,8 +198,8 @@
 
   .spinner {
     width: 48px; height: 48px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
+    border: 2px solid #dde1ec;
+    border-top-color: #2563eb;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -263,18 +254,18 @@
     height: 2px;
   }
 
-  .kpi-card.c1::before { background: var(--accent); }
-  .kpi-card.c2::before { background: var(--accent2); }
-  .kpi-card.c3::before { background: var(--accent3); }
-  .kpi-card.c4::before { background: var(--accent4); }
-  .kpi-card.c5::before { background: #c77dff; }
-  .kpi-card.c6::before { background: var(--red); }
-  .kpi-card.c7::before { background: #06d6a0; }
-  .kpi-card.c8::before { background: #f72585; }
+  .kpi-card.c1::before { background: #2563eb; }
+  .kpi-card.c2::before { background: #f97316; }
+  .kpi-card.c3::before { background: #16a34a; }
+  .kpi-card.c4::before { background: #d97706; }
+  .kpi-card.c5::before { background: #7c3aed; }
+  .kpi-card.c6::before { background: #dc2626; }
+  .kpi-card.c7::before { background: #0f766e; }
+  .kpi-card.c8::before { background: #be185d; }
 
   .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   }
 
   .kpi-label {
@@ -294,14 +285,14 @@
     margin-bottom: 4px;
   }
 
-  .kpi-card.c1 .kpi-value { color: var(--accent); }
-  .kpi-card.c2 .kpi-value { color: var(--accent2); }
-  .kpi-card.c3 .kpi-value { color: var(--accent3); }
-  .kpi-card.c4 .kpi-value { color: var(--accent4); }
-  .kpi-card.c5 .kpi-value { color: #c77dff; }
-  .kpi-card.c6 .kpi-value { color: var(--red); }
-  .kpi-card.c7 .kpi-value { color: #06d6a0; }
-  .kpi-card.c8 .kpi-value { color: #f72585; }
+  .kpi-card.c1 .kpi-value { color: #1d4ed8; }
+  .kpi-card.c2 .kpi-value { color: #ea580c; }
+  .kpi-card.c3 .kpi-value { color: #15803d; }
+  .kpi-card.c4 .kpi-value { color: #b45309; }
+  .kpi-card.c5 .kpi-value { color: #7c3aed; }
+  .kpi-card.c6 .kpi-value { color: #dc2626; }
+  .kpi-card.c7 .kpi-value { color: #0f766e; }
+  .kpi-card.c8 .kpi-value { color: #be185d; }
 
   .kpi-sub {
     font-family: var(--font-mono);
@@ -318,9 +309,9 @@
     border-radius: 3px;
   }
 
-  .kpi-change.up { color: var(--accent3); background: rgba(127,255,107,0.1); }
-  .kpi-change.down { color: var(--red); background: rgba(255,71,87,0.1); }
-  .kpi-change.neu { color: var(--muted); background: rgba(90,98,120,0.1); }
+  .kpi-change.up { color: #15803d; background: rgba(22,163,74,0.1); }
+  .kpi-change.down { color: #dc2626; background: rgba(220,38,38,0.1); }
+  .kpi-change.neu { color: var(--muted); background: rgba(107,114,128,0.1); }
 
   /* CHARTS GRID */
   .charts-grid {
@@ -359,7 +350,7 @@
 
   .chart-title::before {
     content: '▸';
-    color: var(--accent);
+    color: #2563eb;
   }
 
   .chart-wrap {
@@ -419,12 +410,12 @@
 
   td:first-child {
     text-align: left;
-    color: var(--accent);
+    color: #2563eb;
     font-weight: 600;
   }
 
-  .neg { color: var(--red); }
-  .pos { color: var(--accent3); }
+  .neg { color: #dc2626; }
+  .pos { color: #15803d; }
 
   /* GAUGE CARDS */
   .gauge-row {
@@ -487,7 +478,7 @@
     font-size: 10px;
     color: var(--muted);
     letter-spacing: 1px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid #dde1ec;
     margin-top: 16px;
   }
 
@@ -823,10 +814,10 @@ function renderKPIs() {
 function renderGauges() {
   const d = allData[currentQIdx];
   const gauges = [
-    { label: '브랜드 등급', val: d.브랜드등급, max: 5, color: '#c77dff' },
-    { label: '품질 등급', val: d.품질등급, max: 5, color: '#00e5ff' },
-    { label: '영업직원 만족도', val: d.영업직원만족도, max: 5, color: '#06d6a0' },
-    { label: '생산/재고 비율', val: Math.min(5, (d.생산량 / (d.재고량 || 1) * 0.5).toFixed(1)), max: 5, color: '#ffd166' },
+    { label: '브랜드 등급', val: d.브랜드등급, max: 5, color: '#7c3aed' },
+    { label: '품질 등급', val: d.품질등급, max: 5, color: '#2563eb' },
+    { label: '영업직원 만족도', val: d.영업직원만족도, max: 5, color: '#0f766e' },
+    { label: '생산/재고 비율', val: Math.min(5, (d.생산량 / (d.재고량 || 1) * 0.5).toFixed(1)), max: 5, color: '#d97706' },
   ];
 
   document.getElementById('gauge-row').innerHTML = gauges.map((g, i) => {
@@ -857,10 +848,10 @@ function renderGauges() {
 
 function renderCharts() {
   const labels = allData.map(d => d.분기);
-  const palette = { accent: '#00e5ff', accent2: '#ff6b35', accent3: '#7fff6b', accent4: '#ffd166', purple: '#c77dff', red: '#ff4757' };
+  const palette = { accent: '#2563eb', accent2: '#f97316', accent3: '#16a34a', accent4: '#d97706', purple: '#7c3aed', red: '#dc2626' };
 
-  const gridColor = 'rgba(30,35,48,0.8)';
-  const textColor = '#5a6278';
+  const gridColor = 'rgba(200,210,230,0.6)';
+  const textColor = '#374151';
 
   const baseOpts = {
     responsive: true,
@@ -881,8 +872,8 @@ function renderCharts() {
     data: {
       labels,
       datasets: [
-        { label: '매출(억원)', data: allData.map(d => +(d.매출/1e8).toFixed(2)), backgroundColor: 'rgba(0,229,255,0.25)', borderColor: palette.accent, borderWidth: 2, borderRadius: 3 },
-        { label: '순이익(억원)', data: allData.map(d => +(d.순이익/1e8).toFixed(2)), backgroundColor: 'rgba(255,107,53,0.25)', borderColor: palette.accent2, borderWidth: 2, borderRadius: 3, type: 'line', tension: 0.4, pointBackgroundColor: palette.accent2 }
+        { label: '매출(억원)', data: allData.map(d => +(d.매출/1e8).toFixed(2)), backgroundColor: 'rgba(37,99,235,0.15)', borderColor: palette.accent, borderWidth: 2, borderRadius: 3 },
+        { label: '순이익(억원)', data: allData.map(d => +(d.순이익/1e8).toFixed(2)), backgroundColor: 'rgba(249,115,22,0.15)', borderColor: palette.accent2, borderWidth: 2, borderRadius: 3, type: 'line', tension: 0.4, pointBackgroundColor: palette.accent2 }
       ]
     },
     options: { ...baseOpts }
@@ -900,7 +891,7 @@ function renderCharts() {
           label: d.분기,
           data: [(d.판매량/10000).toFixed(1), (d.생산량/10000).toFixed(1), (d.재고량/10000).toFixed(1)],
           borderColor: colors[i % 4],
-          backgroundColor: colors[i % 4].replace(')', ',0.1)').replace('rgb', 'rgba'),
+          backgroundColor: colors[i % 4] + '22',
           pointBackgroundColor: colors[i % 4],
           borderWidth: 2
         };
@@ -910,7 +901,7 @@ function renderCharts() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { labels: { color: textColor, font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 12 } }, tooltip: baseOpts.plugins.tooltip },
-      scales: { r: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 }, backdropColor: 'transparent' }, pointLabels: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 } } } }
+      scales: { r: { grid: { color: 'rgba(200,210,230,0.8)' }, ticks: { color: '#6b7280', font: { family: 'IBM Plex Mono', size: 9 }, backdropColor: '#ffffff' }, pointLabels: { color: '#374151', font: { family: 'IBM Plex Mono', size: 9 } } } }
     }
   });
 
@@ -920,7 +911,7 @@ function renderCharts() {
     type: 'line',
     data: {
       labels,
-      datasets: [{ label: '주가(원)', data: allData.map(d => d.주가), borderColor: palette.accent3, backgroundColor: 'rgba(127,255,107,0.06)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: palette.accent3 }]
+      datasets: [{ label: '주가(원)', data: allData.map(d => d.주가), borderColor: palette.accent3, backgroundColor: 'rgba(22,163,74,0.07)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: palette.accent3 }]
     },
     options: { ...baseOpts }
   });
@@ -932,7 +923,7 @@ function renderCharts() {
     data: {
       labels,
       datasets: [
-        { label: '자산(억)', data: allData.map(d => +(d.자산/1e8).toFixed(1)), borderColor: palette.purple, backgroundColor: 'rgba(199,125,255,0.07)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: palette.purple },
+        { label: '자산(억)', data: allData.map(d => +(d.자산/1e8).toFixed(1)), borderColor: palette.purple, backgroundColor: 'rgba(124,58,237,0.07)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: palette.purple },
         { label: '기말현금(억)', data: allData.map(d => +(d.기말현금/1e8).toFixed(1)), borderColor: palette.accent4, borderWidth: 2, tension: 0.4, pointBackgroundColor: palette.accent4 }
       ]
     },
@@ -946,7 +937,7 @@ function renderCharts() {
     data: {
       labels,
       datasets: [
-        { label: '제조원가(억)', data: allData.map(d => +(d.제조원가/1e8).toFixed(1)), backgroundColor: 'rgba(255,71,87,0.3)', borderColor: palette.red, borderWidth: 2, borderRadius: 3 },
+        { label: '제조원가(억)', data: allData.map(d => +(d.제조원가/1e8).toFixed(1)), backgroundColor: 'rgba(220,38,38,0.15)', borderColor: palette.red, borderWidth: 2, borderRadius: 3 },
         { label: '원가율(%)', data: allData.map(d => d.매출 > 0 ? +(d.제조원가/d.매출*100).toFixed(1) : 0), type: 'line', borderColor: palette.accent4, borderWidth: 2, tension: 0.4, pointBackgroundColor: palette.accent4, yAxisID: 'y2' }
       ]
     },
