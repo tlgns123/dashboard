@@ -603,7 +603,7 @@
 
   </div>
 
-  <footer>BIZMETRICS DASHBOARD · 데이터 소스: Google Sheets · 자동 새로고침 10분</footer>
+  <footer>BIZMETRICS DASHBOARD · 데이터 소스: Google Sheets · 자동 새로고침 30초</footer>
 </div>
 
 <script>
@@ -613,17 +613,17 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQPTKmm_hG92QRC
 const SEED = [
   {
     분기: '4차년도 1분기',
-    매출: 83,818,663,880,
-    주가: 3,806,
-    순이익: -2,186,327,450,
-    판매량: 119,988,
+    매출: 83818663880,
+    주가: 3806,
+    순이익: -2186327450,
+    판매량: 119988,
     브랜드등급: 4,
-    재고량: 29,345,
-    생산량: 127,656,
+    재고량: 29345,
+    생산량: 127656,
     품질등급: 3,
-    제조원가: 51,432,616,600,
-    자산: 77,375,868,804,
-    기말현금: 11,421,736,927,
+    제조원가: 51432616600,
+    자산: 77375868804,
+    기말현금: 11421736927,
     영업직원수: 582,
     영업직원만족도: 3
   }
@@ -633,18 +633,32 @@ let allData = [];
 let currentQIdx = 0;
 let charts = {};
 
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
 function parseCSV(text) {
   const lines = text.trim().split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim());
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
-    const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    const vals = parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
     if (vals.length < 2 || !vals[0]) continue;
     const obj = {};
     headers.forEach((h, idx) => {
       const v = vals[idx] || '';
-      const numStr = v.replace(/[^\d.\-]/g, '');
+      // 쉼표 포함 숫자(예: 83,818,663,880)와 괄호 앞 음수 처리
+      const numStr = v.replace(/,/g, '').replace(/[^\d.\-]/g, '');
       obj[h] = numStr !== '' && !isNaN(numStr) ? parseFloat(numStr) : v;
     });
     rows.push(obj);
@@ -653,29 +667,39 @@ function parseCSV(text) {
 }
 
 function normalizeRow(r) {
+  // 열 이름 공백·괄호 제거 후 매칭
+  const norm = (s) => s.replace(/\s/g,'').replace(/[()（）]/g,'');
   const get = (...keys) => {
     for (const k of keys) {
       for (const rk of Object.keys(r)) {
-        if (rk.replace(/\s/g,'').includes(k.replace(/\s/g,''))) return r[rk];
+        if (norm(rk).includes(norm(k))) {
+          const v = r[rk];
+          // 숫자 문자열이면 변환
+          if (typeof v === 'string') {
+            const n = parseFloat(v.replace(/[^\d.\-]/g, ''));
+            return isNaN(n) ? v : n;
+          }
+          return v;
+        }
       }
     }
     return 0;
   };
   return {
     분기: get('분기') || '',
-    매출: get('매출'),
-    주가: get('주가'),
-    순이익: get('순이익'),
-    판매량: get('판매량'),
-    브랜드등급: get('브랜드'),
-    재고량: get('재고량'),
-    생산량: get('생산량'),
-    품질등급: get('품질'),
-    제조원가: get('제조원가'),
-    자산: get('자산'),
-    기말현금: get('기말현금'),
-    영업직원수: get('영업직원수'),
-    영업직원만족도: get('만족도')
+    매출: get('매출(원)', '매출'),
+    주가: get('주가(원)', '주가'),
+    순이익: get('순이익(원)', '순이익'),
+    판매량: get('판매량(개)', '판매량'),
+    브랜드등급: get('브랜드등급(등급)', '브랜드'),
+    재고량: get('재고량(개)', '재고량'),
+    생산량: get('생산량(개)', '생산량'),
+    품질등급: get('품질등급(등급)', '품질'),
+    제조원가: get('제조원가(원)', '제조원가'),
+    자산: get('자산(원)', '자산'),
+    기말현금: get('기말현금(원)', '기말현금'),
+    영업직원수: get('영업직원수(명)', '영업직원수'),
+    영업직원만족도: get('영업직원만족도(등급)', '만족도')
   };
 }
 
