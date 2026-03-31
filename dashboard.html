@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>경영 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181b22;
+    --border: #1e2330;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #7fff6b;
+    --accent4: #ffd166;
+    --red: #ff4757;
+    --text: #e8ecf4;
+    --muted: #5a6278;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Nanum Gothic', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow blobs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px 28px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-family: var(--font-display);
+    font-size: 48px;
+    letter-spacing: 4px;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .header-left h1 span {
+    color: var(--accent);
+  }
+
+  .header-left .subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 8px var(--accent3);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .last-updated {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .refresh-btn {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 7px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .refresh-btn:hover {
+    background: rgba(0,229,255,0.1);
+    box-shadow: 0 0 16px rgba(0,229,255,0.2);
+  }
+
+  /* QUARTER SELECTOR */
+  .quarter-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .quarter-selector label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .q-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .q-btn.active {
+    background: rgba(0,229,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 10px rgba(0,229,255,0.15);
+  }
+
+  .q-btn:hover:not(.active) {
+    border-color: var(--muted);
+    color: var(--text);
+  }
+
+  /* LOADING */
+  #loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    gap: 16px;
+  }
+
+  .spinner {
+    width: 48px; height: 48px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #loading p {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* ERROR */
+  #error-msg {
+    display: none;
+    background: rgba(255,71,87,0.1);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 24px;
+  }
+
+  /* MAIN DASHBOARD */
+  #dashboard { display: none; }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .kpi-card.c1::before { background: var(--accent); }
+  .kpi-card.c2::before { background: var(--accent2); }
+  .kpi-card.c3::before { background: var(--accent3); }
+  .kpi-card.c4::before { background: var(--accent4); }
+  .kpi-card.c5::before { background: #c77dff; }
+  .kpi-card.c6::before { background: var(--red); }
+  .kpi-card.c7::before { background: #06d6a0; }
+  .kpi-card.c8::before { background: #f72585; }
+
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 2px;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+
+  .kpi-card.c1 .kpi-value { color: var(--accent); }
+  .kpi-card.c2 .kpi-value { color: var(--accent2); }
+  .kpi-card.c3 .kpi-value { color: var(--accent3); }
+  .kpi-card.c4 .kpi-value { color: var(--accent4); }
+  .kpi-card.c5 .kpi-value { color: #c77dff; }
+  .kpi-card.c6 .kpi-value { color: var(--red); }
+  .kpi-card.c7 .kpi-value { color: #06d6a0; }
+  .kpi-card.c8 .kpi-value { color: #f72585; }
+
+  .kpi-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .kpi-change {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  .kpi-change.up { color: var(--accent3); background: rgba(127,255,107,0.1); }
+  .kpi-change.down { color: var(--red); background: rgba(255,71,87,0.1); }
+  .kpi-change.neu { color: var(--muted); background: rgba(90,98,120,0.1); }
+
+  /* CHARTS GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+  }
+
+  .chart-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-title::before {
+    content: '▸';
+    color: var(--accent);
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+  }
+
+  .chart-wrap.tall { height: 280px; }
+
+  /* TABLE */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 10px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  th:first-child { text-align: left; }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(30,35,48,0.5);
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 9px 10px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  td:first-child {
+    text-align: left;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .neg { color: var(--red); }
+  .pos { color: var(--accent3); }
+
+  /* GAUGE CARDS */
+  .gauge-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .gauge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .gauge-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .gauge-wrap {
+    position: relative;
+    width: 100px;
+    height: 60px;
+    margin: 0 auto 10px;
+    overflow: hidden;
+  }
+
+  .gauge-wrap svg {
+    width: 100px;
+    height: 100px;
+    transform: translateY(0);
+  }
+
+  .gauge-num {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .gauge-max {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 24px 0 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+  }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr 1fr; }
+    .gauge-row { grid-template-columns: repeat(2, 1fr); }
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header-left h1 { font-size: 36px; }
+  }
+
+  @media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="header-left">
+      <h1>BIZMETRICS <span>DASHBOARD</span></h1>
+      <div class="subtitle">경영 성과 실시간 분석 시스템 · REAL-TIME ANALYTICS</div>
+    </div>
+    <div class="header-right">
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span id="status-text">연결 중...</span>
+      </div>
+      <div class="last-updated" id="last-updated">—</div>
+      <button class="refresh-btn" onclick="loadData()">↻ 새로고침</button>
+    </div>
+  </header>
+
+  <div id="error-msg"></div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>데이터 로딩 중...</p>
+  </div>
+
+  <div id="dashboard">
+
+    <!-- Quarter selector -->
+    <div class="quarter-selector">
+      <label>분기 선택 ▸</label>
+      <div id="quarter-btns"></div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- Charts Row 1 -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">매출 vs 순이익 추이</div>
+        <div class="chart-wrap tall"><canvas id="chart-revenue"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">재고 · 생산 · 판매 비교</div>
+        <div class="chart-wrap tall"><canvas id="chart-inventory"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">주가 추이</div>
+        <div class="chart-wrap"><canvas id="chart-stock"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">자산 · 기말현금</div>
+        <div class="chart-wrap"><canvas id="chart-asset"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">제조원가 vs 매출원가율</div>
+        <div class="chart-wrap"><canvas id="chart-cost"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Grade gauges -->
+    <div class="gauge-row" id="gauge-row"></div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:12px;">전체 분기별 데이터</div>
+      <table>
+        <thead>
+          <tr>
+            <th>분기</th>
+            <th>매출(억)</th>
+            <th>순이익(억)</th>
+            <th>주가(원)</th>
+            <th>판매량</th>
+            <th>생산량</th>
+            <th>재고량</th>
+            <th>제조원가(억)</th>
+            <th>자산(억)</th>
+            <th>기말현금(억)</th>
+            <th>영업직원</th>
+          </tr>
+        </thead>
+        <tbody id="data-table-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <footer>BIZMETRICS DASHBOARD · 데이터 소스: Google Sheets · 자동 새로고침 30초</footer>
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQPTKmm_hG92QRCzImrWjvn8wDbXIyMxe_rOBEgqKt3mAdbB78im4lk2J9SK0v_mrYm90z8Jpi1_Adi/pub?gid=278633911&single=true&output=csv';
+
+// Fallback seed data (4차년도 1분기)
+const SEED = [
+  {
+    분기: '4차년도 1분기',
+    매출: 83818663880,
+    주가: 3806,
+    순이익: -2186327450,
+    판매량: 119988,
+    브랜드등급: 4,
+    재고량: 29345,
+    생산량: 127656,
+    품질등급: 3,
+    제조원가: 51432616600,
+    자산: 77375868804,
+    기말현금: 11421736927,
+    영업직원수: 582,
+    영업직원만족도: 3
+  }
+];
+
+let allData = [];
+let currentQIdx = 0;
+let charts = {};
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    if (vals.length < 2 || !vals[0]) continue;
+    const obj = {};
+    headers.forEach((h, idx) => {
+      const v = vals[idx] || '';
+      const numStr = v.replace(/[^\d.\-]/g, '');
+      obj[h] = numStr !== '' && !isNaN(numStr) ? parseFloat(numStr) : v;
+    });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function normalizeRow(r) {
+  const get = (...keys) => {
+    for (const k of keys) {
+      for (const rk of Object.keys(r)) {
+        if (rk.replace(/\s/g,'').includes(k.replace(/\s/g,''))) return r[rk];
+      }
+    }
+    return 0;
+  };
+  return {
+    분기: get('분기') || '',
+    매출: get('매출'),
+    주가: get('주가'),
+    순이익: get('순이익'),
+    판매량: get('판매량'),
+    브랜드등급: get('브랜드'),
+    재고량: get('재고량'),
+    생산량: get('생산량'),
+    품질등급: get('품질'),
+    제조원가: get('제조원가'),
+    자산: get('자산'),
+    기말현금: get('기말현금'),
+    영업직원수: get('영업직원수'),
+    영업직원만족도: get('만족도')
+  };
+}
+
+async function loadData() {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('status-text').textContent = '연결 중...';
+
+  try {
+    // Try CORS proxy
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(CSV_URL)}`
+    ];
+
+    let raw = null;
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy, { signal: AbortSignal.timeout(8000) });
+        if (res.ok) { raw = await res.text(); break; }
+      } catch(e) { /* try next */ }
+    }
+
+    if (raw && raw.includes(',')) {
+      const parsed = parseCSV(raw);
+      if (parsed.length > 0) {
+        allData = parsed.map(normalizeRow).filter(r => r.분기);
+      } else {
+        throw new Error('데이터 파싱 실패');
+      }
+    } else {
+      throw new Error('CSV 로드 실패');
+    }
+
+    document.getElementById('status-text').textContent = '실시간 연결됨';
+  } catch(e) {
+    // Use seed data
+    allData = [...SEED];
+    const errEl = document.getElementById('error-msg');
+    errEl.style.display = 'block';
+    errEl.textContent = `⚠ Google Sheets 직접 연결 실패 (CORS 제한). 시드 데이터로 표시 중. 브라우저에서 직접 실행하거나 CORS 프록시를 허용해 주세요.`;
+    document.getElementById('status-text').textContent = '오프라인 (시드 데이터)';
+  }
+
+  if (allData.length === 0) allData = [...SEED];
+
+  currentQIdx = allData.length - 1;
+  renderQuarterBtns();
+  renderDashboard();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('last-updated').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
+}
+
+function renderQuarterBtns() {
+  const container = document.getElementById('quarter-btns');
+  container.innerHTML = '';
+  allData.forEach((d, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'q-btn' + (i === currentQIdx ? ' active' : '');
+    btn.textContent = d.분기 || `분기 ${i+1}`;
+    btn.onclick = () => {
+      currentQIdx = i;
+      document.querySelectorAll('.q-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+      renderKPIs();
+      renderGauges();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function fmt억(v) {
+  const b = v / 1e8;
+  return b.toFixed(1) + '억';
+}
+
+function fmtNum(v) {
+  return Number(v).toLocaleString('ko-KR');
+}
+
+function renderKPIs() {
+  const d = allData[currentQIdx];
+  const prev = currentQIdx > 0 ? allData[currentQIdx - 1] : null;
+
+  const chg = (curr, p) => {
+    if (!p || p === 0) return null;
+    return ((curr - p) / Math.abs(p) * 100).toFixed(1);
+  };
+
+  const kpis = [
+    { label: '매출', value: fmt억(d.매출), sub: fmtNum(d.매출) + '원', cls: 'c1', chg: chg(d.매출, prev?.매출) },
+    { label: '순이익', value: fmt억(d.순이익), sub: fmtNum(d.순이익) + '원', cls: 'c2', chg: chg(d.순이익, prev?.순이익) },
+    { label: '주가', value: fmtNum(d.주가) + '원', sub: '현재 주가', cls: 'c3', chg: chg(d.주가, prev?.주가) },
+    { label: '판매량', value: fmtNum(d.판매량) + '개', sub: '총 판매', cls: 'c4', chg: chg(d.판매량, prev?.판매량) },
+    { label: '자산', value: fmt억(d.자산), sub: '총 자산', cls: 'c5', chg: chg(d.자산, prev?.자산) },
+    { label: '기말현금', value: fmt억(d.기말현금), sub: '현금 보유', cls: 'c7', chg: chg(d.기말현금, prev?.기말현금) },
+    { label: '제조원가', value: fmt억(d.제조원가), sub: '원가', cls: 'c8', chg: chg(d.제조원가, prev?.제조원가) },
+    { label: '영업직원', value: fmtNum(d.영업직원수) + '명', sub: '영업 인력', cls: 'c6', chg: chg(d.영업직원수, prev?.영업직원수) },
+  ];
+
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = kpis.map(k => {
+    let changePill = '';
+    if (k.chg !== null) {
+      const cls = parseFloat(k.chg) > 0 ? 'up' : parseFloat(k.chg) < 0 ? 'down' : 'neu';
+      const sign = parseFloat(k.chg) > 0 ? '+' : '';
+      changePill = `<span class="kpi-change ${cls}">${sign}${k.chg}%</span>`;
+    }
+    return `<div class="kpi-card ${k.cls}">
+      ${changePill}
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderGauges() {
+  const d = allData[currentQIdx];
+  const gauges = [
+    { label: '브랜드 등급', val: d.브랜드등급, max: 5, color: '#c77dff' },
+    { label: '품질 등급', val: d.품질등급, max: 5, color: '#00e5ff' },
+    { label: '영업직원 만족도', val: d.영업직원만족도, max: 5, color: '#06d6a0' },
+    { label: '생산/재고 비율', val: Math.min(5, (d.생산량 / (d.재고량 || 1) * 0.5).toFixed(1)), max: 5, color: '#ffd166' },
+  ];
+
+  document.getElementById('gauge-row').innerHTML = gauges.map((g, i) => {
+    const pct = (g.val / g.max);
+    const r = 40;
+    const cx = 50, cy = 50;
+    const startAngle = Math.PI;
+    const endAngle = Math.PI + pct * Math.PI;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    const largeArc = pct > 0.5 ? 1 : 0;
+
+    return `<div class="gauge-card">
+      <div class="gauge-label">${g.label}</div>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 100 55">
+          <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="#1e2330" stroke-width="8" stroke-linecap="round"/>
+          <path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}" fill="none" stroke="${g.color}" stroke-width="8" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${g.color})"/>
+        </svg>
+      </div>
+      <div class="gauge-num" style="color:${g.color}">${g.val}</div>
+      <div class="gauge-max">/ ${g.max} 등급</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCharts() {
+  const labels = allData.map(d => d.분기);
+  const palette = { accent: '#00e5ff', accent2: '#ff6b35', accent3: '#7fff6b', accent4: '#ffd166', purple: '#c77dff', red: '#ff4757' };
+
+  const gridColor = 'rgba(30,35,48,0.8)';
+  const textColor = '#5a6278';
+
+  const baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: textColor, font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 12, padding: 12 } }, tooltip: { backgroundColor: '#181b22', borderColor: '#1e2330', borderWidth: 1, titleFont: { family: 'IBM Plex Mono' }, bodyFont: { family: 'IBM Plex Mono' }, titleColor: '#e8ecf4', bodyColor: '#5a6278' } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 } } },
+      y: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 } } }
+    }
+  };
+
+  const destroy = (id) => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } };
+
+  // Revenue vs profit
+  destroy('revenue');
+  charts.revenue = new Chart(document.getElementById('chart-revenue'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: '매출(억원)', data: allData.map(d => +(d.매출/1e8).toFixed(2)), backgroundColor: 'rgba(0,229,255,0.25)', borderColor: palette.accent, borderWidth: 2, borderRadius: 3 },
+        { label: '순이익(억원)', data: allData.map(d => +(d.순이익/1e8).toFixed(2)), backgroundColor: 'rgba(255,107,53,0.25)', borderColor: palette.accent2, borderWidth: 2, borderRadius: 3, type: 'line', tension: 0.4, pointBackgroundColor: palette.accent2 }
+      ]
+    },
+    options: { ...baseOpts }
+  });
+
+  // Inventory / production / sales
+  destroy('inventory');
+  charts.inventory = new Chart(document.getElementById('chart-inventory'), {
+    type: 'radar',
+    data: {
+      labels: ['판매량(만)', '생산량(만)', '재고량(만)'],
+      datasets: allData.slice(-4).map((d, i) => {
+        const colors = [palette.accent, palette.accent2, palette.accent3, palette.purple];
+        return {
+          label: d.분기,
+          data: [(d.판매량/10000).toFixed(1), (d.생산량/10000).toFixed(1), (d.재고량/10000).toFixed(1)],
+          borderColor: colors[i % 4],
+          backgroundColor: colors[i % 4].replace(')', ',0.1)').replace('rgb', 'rgba'),
+          pointBackgroundColor: colors[i % 4],
+          borderWidth: 2
+        };
+      })
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: textColor, font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 12 } }, tooltip: baseOpts.plugins.tooltip },
+      scales: { r: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 }, backdropColor: 'transparent' }, pointLabels: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 } } } }
+    }
+  });
+
+  // Stock
+  destroy('stock');
+  charts.stock = new Chart(document.getElementById('chart-stock'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{ label: '주가(원)', data: allData.map(d => d.주가), borderColor: palette.accent3, backgroundColor: 'rgba(127,255,107,0.06)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: palette.accent3 }]
+    },
+    options: { ...baseOpts }
+  });
+
+  // Asset + Cash
+  destroy('asset');
+  charts.asset = new Chart(document.getElementById('chart-asset'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: '자산(억)', data: allData.map(d => +(d.자산/1e8).toFixed(1)), borderColor: palette.purple, backgroundColor: 'rgba(199,125,255,0.07)', borderWidth: 2, tension: 0.4, fill: true, pointBackgroundColor: palette.purple },
+        { label: '기말현금(억)', data: allData.map(d => +(d.기말현금/1e8).toFixed(1)), borderColor: palette.accent4, borderWidth: 2, tension: 0.4, pointBackgroundColor: palette.accent4 }
+      ]
+    },
+    options: { ...baseOpts }
+  });
+
+  // Cost ratio
+  destroy('cost');
+  charts.cost = new Chart(document.getElementById('chart-cost'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: '제조원가(억)', data: allData.map(d => +(d.제조원가/1e8).toFixed(1)), backgroundColor: 'rgba(255,71,87,0.3)', borderColor: palette.red, borderWidth: 2, borderRadius: 3 },
+        { label: '원가율(%)', data: allData.map(d => d.매출 > 0 ? +(d.제조원가/d.매출*100).toFixed(1) : 0), type: 'line', borderColor: palette.accent4, borderWidth: 2, tension: 0.4, pointBackgroundColor: palette.accent4, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      ...baseOpts,
+      scales: {
+        ...baseOpts.scales,
+        y2: { position: 'right', grid: { display: false }, ticks: { color: textColor, font: { family: 'IBM Plex Mono', size: 9 }, callback: v => v + '%' } }
+      }
+    }
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('data-table-body');
+  tbody.innerHTML = allData.map(d => `
+    <tr>
+      <td>${d.분기}</td>
+      <td>${fmt억(d.매출)}</td>
+      <td class="${d.순이익 < 0 ? 'neg' : 'pos'}">${fmt억(d.순이익)}</td>
+      <td>${fmtNum(d.주가)}</td>
+      <td>${fmtNum(d.판매량)}</td>
+      <td>${fmtNum(d.생산량)}</td>
+      <td>${fmtNum(d.재고량)}</td>
+      <td>${fmt억(d.제조원가)}</td>
+      <td>${fmt억(d.자산)}</td>
+      <td>${fmt억(d.기말현금)}</td>
+      <td>${fmtNum(d.영업직원수)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderDashboard() {
+  renderKPIs();
+  renderGauges();
+  renderCharts();
+  renderTable();
+}
+
+// Auto refresh every 30 seconds
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>
