@@ -603,7 +603,7 @@
 
   </div>
 
-  <footer>BIZMETRICS DASHBOARD · 데이터 소스: Google Sheets · 자동 새로고침 30초</footer>
+  <footer>BIZMETRICS DASHBOARD · 데이터 소스: Google Sheets · 자동 새로고침 10분</footer>
 </div>
 
 <script>
@@ -657,9 +657,11 @@ function parseCSV(text) {
     const obj = {};
     headers.forEach((h, idx) => {
       const v = vals[idx] || '';
-      // 쉼표 포함 숫자(예: 83,818,663,880)와 괄호 앞 음수 처리
-      const numStr = v.replace(/,/g, '').replace(/[^\d.\-]/g, '');
-      obj[h] = numStr !== '' && !isNaN(numStr) ? parseFloat(numStr) : v;
+      // (2,186,327,450) 형식 → 음수 변환, 쉼표 포함 큰 숫자 처리
+      const isNeg = /^\([\d,\.\s]+\)$/.test(v.trim());
+      const numStr = v.replace(/,/g, '').replace(/[()]/g, '').trim();
+      const parsed = numStr !== '' && !isNaN(numStr) ? parseFloat(numStr) * (isNeg ? -1 : 1) : v;
+      obj[h] = parsed;
     });
     rows.push(obj);
   }
@@ -984,9 +986,9 @@ function renderDashboard() {
   renderTable();
 }
 
-// Auto refresh every 30 seconds
+// Auto refresh every 10 minutes
 loadData();
-setInterval(loadData, 30000);
+setInterval(loadData, 600000);
 </script>
 </body>
 </html>
