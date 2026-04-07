@@ -174,8 +174,9 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 18px 20px;
+    padding: 16px 20px;
     position: relative;
+    overflow: hidden;
   }
 
   .kpi-card::before {
@@ -193,16 +194,30 @@
     font-size: 9px;
     letter-spacing: 1px;
     color: var(--muted);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .kpi-value-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .kpi-value {
     font-family: var(--font-display);
     font-size: 32px;
-    line-height: 1.1;
+    line-height: 1;
+    color: var(--text);
   }
 
-  /* 차트 레이아웃 구성 */
+  .kpi-full-value {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+
   .charts-main-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -264,7 +279,7 @@
   <header>
     <div class="header-left">
       <h1>BIZMETRICS <span>LIVE</span></h1>
-      <div class="subtitle">실시간 데이터 시각화 · 분기별 성과 추적 시스템</div>
+      <div class="subtitle">실시간 데이터 시각화 · 세부 수치 포함 대시보드</div>
     </div>
     <div class="header-right">
       <div class="selector-group">
@@ -290,7 +305,7 @@
     <!-- 상단 KPI -->
     <div class="kpi-grid" id="kpi-grid"></div>
 
-    <!-- 메인 차트: 매출/수익 및 주가 -->
+    <!-- 메인 차트 -->
     <div class="charts-main-grid">
       <div class="chart-card">
         <div class="chart-title">매출액 및 순이익 추이 (억원)</div>
@@ -302,7 +317,7 @@
       </div>
     </div>
 
-    <!-- 서브 차트: 운영 지표 -->
+    <!-- 서브 차트 -->
     <div class="charts-sub-grid">
       <div class="chart-card">
         <div class="chart-title">판매량 vs 생산량 비교</div>
@@ -320,7 +335,7 @@
 
     <!-- 상세 테이블 -->
     <div class="table-card">
-      <div class="chart-title">데이터 요약 리스트</div>
+      <div class="chart-title">분기별 전체 데이터 요약</div>
       <table>
         <thead>
           <tr>
@@ -442,13 +457,20 @@ function updateView() {
 function renderKPIs(d) {
   const grid = document.getElementById('kpi-grid');
   const items = [
-    { label: `${d.분기} 매출액`, val: (d.매출/1e8).toFixed(1) + '억', cls: 'c1' },
-    { label: `${d.분기} 순이익`, val: (d.순이익/1e8).toFixed(1) + '억', cls: 'c2' },
-    { label: `분기말 주가`, val: d.주가.toLocaleString() + '원', cls: 'c3' },
-    { label: `기말 재고`, val: d.재고량.toLocaleString() + '개', cls: 'c4' }
+    { label: `${d.분기} 매출액`, val: (d.매출/1e8).toFixed(1) + '억', full: d.매출.toLocaleString() + '원', cls: 'c1' },
+    { label: `${d.분기} 순이익`, val: (d.순이익/1e8).toFixed(1) + '억', full: d.순이익.toLocaleString() + '원', cls: 'c2' },
+    { label: `분기말 주가`, val: d.주가.toLocaleString() + '원', full: 'STOCK PRICE', cls: 'c3' },
+    { label: `기말 자산`, val: (d.자산/1e8).toFixed(1) + '억', full: d.자산.toLocaleString() + '원', cls: 'c4' }
   ];
+  
   grid.innerHTML = items.map(i => `
-    <div class="kpi-card ${i.cls}"><div class="kpi-label">${i.label}</div><div class="kpi-value">${i.val}</div></div>
+    <div class="kpi-card ${i.cls}">
+      <div class="kpi-label">${i.label}</div>
+      <div class="kpi-value-container">
+        <div class="kpi-value">${i.val}</div>
+        <div class="kpi-full-value">${i.full}</div>
+      </div>
+    </div>
   `).join('');
 }
 
@@ -472,7 +494,6 @@ function renderAllCharts(sIdx) {
   const labels = allData.map(d => d.분기);
   const selected = allData[sIdx];
 
-  // 1. 매출/순이익 차트
   destroyAndCreate('chart-revenue', {
     type: 'bar',
     data: {
@@ -484,7 +505,6 @@ function renderAllCharts(sIdx) {
     }
   });
 
-  // 2. 주가 차트
   destroyAndCreate('chart-stock', {
     type: 'line',
     data: {
@@ -493,7 +513,6 @@ function renderAllCharts(sIdx) {
     }
   });
 
-  // 3. 판매/생산 비교
   destroyAndCreate('chart-ops', {
     type: 'bar',
     data: {
@@ -505,7 +524,6 @@ function renderAllCharts(sIdx) {
     }
   });
 
-  // 4. 재고 현황
   destroyAndCreate('chart-inventory', {
     type: 'line',
     data: {
@@ -514,7 +532,6 @@ function renderAllCharts(sIdx) {
     }
   });
 
-  // 5. 레이더 차트
   const maxSales = Math.max(...allData.map(d => d.매출));
   destroyAndCreate('chart-radar', {
     type: 'radar',
