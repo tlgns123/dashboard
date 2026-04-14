@@ -494,13 +494,32 @@ function renderAllCharts(sIdx) {
   const labels = allData.map(d => d.분기);
   const selected = allData[sIdx];
 
+  // 수정됨: 매출액(막대) 및 순이익(선) 차트 레이어 조정
   destroyAndCreate('chart-revenue', {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: '매출(억)', data: allData.map(d => (d.매출/1e8).toFixed(1)), backgroundColor: labels.map((_, i) => i === sIdx ? '#2563eb' : '#cbd5e1') },
-        { label: '순이익(억)', data: allData.map(d => (d.순이익/1e8).toFixed(1)), type: 'line', borderColor: '#f97316', tension: 0.3 }
+        { 
+          label: '순이익(억)', 
+          data: allData.map(d => (d.순이익/1e8).toFixed(1)), 
+          type: 'line', 
+          borderColor: '#f97316', 
+          backgroundColor: '#f97316',
+          borderWidth: 3,
+          pointRadius: 4,
+          pointBackgroundColor: '#ffffff',
+          pointBorderWidth: 2,
+          tension: 0.3,
+          order: 1 // 숫자가 작을수록 위(앞)에 그려짐
+        },
+        { 
+          label: '매출(억)', 
+          data: allData.map(d => (d.매출/1e8).toFixed(1)), 
+          backgroundColor: labels.map((_, i) => i === sIdx ? 'rgba(37, 99, 235, 0.9)' : 'rgba(203, 213, 225, 0.6)'),
+          borderRadius: 4,
+          order: 2 // 숫자가 클수록 아래(뒤)에 그려짐
+        }
       ]
     }
   });
@@ -559,7 +578,16 @@ function destroyAndCreate(id, config) {
   const defaultConfig = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { labels: { font: { size: 10 } } } }
+    plugins: { 
+      legend: { 
+        position: 'top',
+        labels: { font: { size: 10, family: 'Nanum Gothic' }, usePointStyle: true } 
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false
+      }
+    }
   };
   charts[id] = new Chart(ctx, { ...config, options: { ...defaultConfig, ...config.options } });
 }
